@@ -16,8 +16,8 @@ class Log:
     handler_console = logging.StreamHandler()
 
     # 设置日志级别
-    handler_file.setLevel(eval(f'logging.{LogConf.LOG_LEVEL}'))
-    handler_console.setLevel(eval(f'logging.{LogConf.LOG_LEVEL}'))
+    handler_file.setLevel(getattr(logging, LogConf.LOG_LEVEL))
+    handler_console.setLevel(getattr(logging, LogConf.LOG_LEVEL))
     # 创建一个格式化器
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler_file.setFormatter(formatter)
@@ -27,7 +27,7 @@ class Log:
     def get_logger(cls, logger_name: str) -> logging.Logger:
         logger = logging.getLogger(logger_name)
         logger.propagate = False
-        logger.setLevel(eval(f'logging.{LogConf.LOG_LEVEL}'))
+        logger.setLevel(getattr(logging, LogConf.LOG_LEVEL))
         if LogConf.HANDLER_LOG_FILE:
             logger.addHandler(cls.handler_file)
         if LogConf.HANDLER_CONSOLE:

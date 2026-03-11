@@ -91,7 +91,8 @@ class AccessFactory:
 
         all_access_metas = []
         for view in cls.views:
-            all_access_metas.append(view.access_metas)
+            metas = view.access_metas() if callable(view.access_metas) else view.access_metas
+            all_access_metas.extend(metas)
         dict_va_cou = Counter(all_access_metas)
         for va, cou in dict_va_cou.items():
             if cou > 1:

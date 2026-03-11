@@ -593,8 +593,8 @@ app.clientside_callback(
                 [/print|def|class|if|else|elif|for|while|return|try|except|finally|with|import|from|as|pass|break|continue/, 'keyword'],
                 [/#.*$/, 'comment'],
                 [/"[^"]*"|'[^']*'/, 'string'],
-                [/\d+/, 'number'],
-                [/[a-zA-Z_]\w*/, 'identifier'],
+                [/\\d+/, 'number'],
+                [/[a-zA-Z_]\\w*/, 'identifier'],
             ]
         }
     });

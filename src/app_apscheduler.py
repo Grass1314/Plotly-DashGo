@@ -68,7 +68,7 @@ def run_script(
     timeout (int): 命令执行的超时时间，单位为秒。
     """
     start_datetime = datetime.now()
-    extract_names = json.loads(extract_names)
+    extract_names = json.loads(extract_names) if extract_names else []
     notify_channels = json.loads(notify_channels)
     env_vars = json.loads(env_vars) if env_vars else {}
     output_full = ''
@@ -84,7 +84,7 @@ def run_script(
                     queue_stdout.put(line.decode(encoding, errors='ignore'))
                 else:
                     queue_stdout.put(line)
-            except:
+            except Exception:
                 ...
 
     def pop_from_stderr(stderr, event: threading.Event, queue_stderr: Queue, encoding='utf8'):
@@ -98,7 +98,7 @@ def run_script(
                     queue_stderr.put(line.decode(encoding, errors='ignore'))
                 else:
                     queue_stderr.put(line)
-            except:
+            except Exception:
                 ...
 
     suffix = SUFFIX[script_type]
@@ -252,11 +252,12 @@ def run_script(
             encoding='utf-8',
         ) as f:
             if script_type == 'Shell':
-                f.write('\n'.join(['export ' + key + "='" + value + "'" for key, value in env_vars.items()]) + '\n')
+                import shlex
+                f.write('\n'.join(['export ' + key + '=' + shlex.quote(value) for key, value in env_vars.items()]) + '\n')
             elif script_type == 'Python':
                 f.write('import os\n')
                 for k, v in env_vars.items():
-                    f.write(f"os.environ['{k}'] = '''{v}'''\n")
+                    f.write(f'os.environ[{k!r}] = {v!r}\n')
             f.write(script_text)
             f.flush()
             script_filepath = f.name
@@ -384,9 +385,9 @@ def run_script(
         except Exception as e:
             raise e
         else:
-            delete_apscheduler_running(job_id=job_id, start_datetime=start_datetime)
             ssh.exec_command("ls /tmp/dashgo_*|sort -r|sed '1,30d'|xargs -n 30 rm -f", get_pty=True, timeout=20)  # 清理历史脚本，最多保留30个
         finally:
+            delete_apscheduler_running(job_id=job_id, start_datetime=start_datetime)
             ssh.close()
 
 

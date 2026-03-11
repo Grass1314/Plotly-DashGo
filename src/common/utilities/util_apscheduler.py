@@ -25,6 +25,8 @@ def add_ssh_date_job(
 ):
     if not extract_names:
         extract_names = None
+    conn = None
+    conn = None
     try:
         conn = get_connect()
         job = conn.root.add_job(
@@ -49,7 +51,8 @@ def add_ssh_date_job(
     except Exception as e:
         raise e
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def add_ssh_interval_job(
@@ -72,6 +75,7 @@ def add_ssh_interval_job(
 ):
     if not extract_names:
         extract_names = None
+    conn = None
     try:
         conn = get_connect()
         job = conn.root.add_job(
@@ -101,7 +105,8 @@ def add_ssh_interval_job(
     except Exception as e:
         raise e
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def add_ssh_cron_job(
@@ -125,6 +130,7 @@ def add_ssh_cron_job(
     """https://apscheduler.readthedocs.io/en/master/api.html#apscheduler.triggers.cron.CronTrigger"""
     if not extract_names:
         extract_names = None
+    conn = None
     try:
         conn = get_connect()
         second, minute, hour, day, month, day_of_week, year, week = cron_list
@@ -162,7 +168,8 @@ def add_ssh_cron_job(
     except Exception as e:
         raise e
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def add_local_date_job(
@@ -176,6 +183,7 @@ def add_local_date_job(
 ):
     if not extract_names:
         extract_names = None
+    conn = None
     try:
         conn = get_connect()
         job = conn.root.add_job(
@@ -196,12 +204,14 @@ def add_local_date_job(
     except Exception as e:
         raise e
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def add_local_interval_job(script_text, script_type, interval, timeout, job_id, update_by, update_datetime, create_by, create_datetime, extract_names, notify_channels, is_pause):
     if not extract_names:
         extract_names = None
+    conn = None
     try:
         conn = get_connect()
         job = conn.root.add_job(
@@ -227,12 +237,14 @@ def add_local_interval_job(script_text, script_type, interval, timeout, job_id, 
     except Exception as e:
         raise e
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def add_local_cron_job(script_text, script_type, cron_list, timeout, job_id, update_by, update_datetime, create_by, create_datetime, extract_names, notify_channels, is_pause):
     if not extract_names:
         extract_names = None
+    conn = None
     try:
         conn = get_connect()
         second, minute, hour, day, month, day_of_week, year, week = cron_list
@@ -266,7 +278,8 @@ def add_local_cron_job(script_text, script_type, cron_list, timeout, job_id, upd
     except Exception as e:
         raise e
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 @dataclass
@@ -289,6 +302,7 @@ class JobInfo:
 
 
 def get_apscheduler_all_jobs():
+    conn = None
     try:
         conn = get_connect()
         job_jsons = json.loads(conn.root.get_jobs())
@@ -326,7 +340,7 @@ def get_apscheduler_all_jobs():
                 timeout=job.timeout,
                 extract_names=job.extract_names,
                 notify_channels=job.notify_channels,
-                update_by=job.extract_names,
+                update_by=job.update_by,
                 update_datetime=f'{job.update_datetime:%Y-%m-%dT%H:%M:%S}',
                 create_by=job.create_by,
                 create_datetime=f'{job.create_datetime:%Y-%m-%dT%H:%M:%S}',
@@ -337,7 +351,8 @@ def get_apscheduler_all_jobs():
     except Exception as e:
         raise e
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def start_stop_job(job_id, is_start: bool, type_task: str):
@@ -370,16 +385,19 @@ def remove_job(job_id, task_tye):
 
 
 def modify_job(job_id, **kwargs):
+    conn = None
     try:
         conn = get_connect()
         conn.root.modify_job(job_id=job_id, **kwargs)
     except Exception as e:
         raise e
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def reschedule_job_cron(job_id, second, minute, hour, day, month, day_of_week, year=None, week=None):
+    conn = None
     try:
         conn = get_connect()
         conn.root.reschedule_job(
@@ -397,10 +415,12 @@ def reschedule_job_cron(job_id, second, minute, hour, day, month, day_of_week, y
     except Exception as e:
         raise e
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def reschedule_job_interval(job_id, seconds):
+    conn = None
     try:
         conn = get_connect()
         conn.root.reschedule_job(
@@ -411,20 +431,24 @@ def reschedule_job_interval(job_id, seconds):
     except Exception as e:
         raise e
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def get_platform():
+    conn = None
     try:
         conn = get_connect()
         return conn.root.get_platform()
     except Exception as e:
         raise e
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def get_job(job_id):
+    conn = None
     try:
         conn = get_connect()
         job_json = conn.root.get_job(job_id)
@@ -435,4 +459,5 @@ def get_job(job_id):
     except Exception as e:
         raise e
     finally:
-        conn.close()
+        if conn:
+            conn.close()

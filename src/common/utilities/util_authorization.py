@@ -10,7 +10,7 @@ class AuthType(Enum):
     BASIC = 'Basic'
 
 
-def auth_validate(verify_exp=True) -> tuple[AuthType, Union[Dict, AccessFailType]]:
+def auth_validate(verify_exp=True) -> Union[Dict, AccessFailType]:
     # 因为不是每个组件都能加headers，所以还是也校验cookies中的token
     auth_header = token_ if (token_ := request.headers.get('Authorization')) else request.cookies.get('Authorization')
     if not auth_header:
@@ -25,7 +25,9 @@ def auth_validate(verify_exp=True) -> tuple[AuthType, Union[Dict, AccessFailType
     elif auth_type == AuthType.BASIC.value:
         # Basic认证
         return validate_basic(auth_token)
-    abort(jsonify({'error': f'Unsupport Type {auth_type}'}), HttpStatusConstant.UNSUPPORTED_TYPE)
+    response = jsonify({'error': f'Unsupported Type {auth_type}'})
+    response.status_code = HttpStatusConstant.UNSUPPORTED_TYPE
+    abort(response)
 
 
 # Basic认证

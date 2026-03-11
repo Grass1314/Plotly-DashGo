@@ -37,7 +37,7 @@ def global_exception_handler(error):
 
     if isinstance(error, NotFoundUserException) or isinstance(error, AuthException):
         util_jwt.clear_access_token_from_session()
-        set_props('global-message-container', {'children': fac.AntdMessage(content='AuthException: {}'.format(error.message), type='error')})
+        set_props('global-message-container', {'children': fac.AntdMessage(content='AuthException: {}'.format(getattr(error, 'message', None) or str(error)), type='error')})
         set_props('main-token-err-modal', {'visible': True})
     else:
         logger.exception(f'[exception]{error}')

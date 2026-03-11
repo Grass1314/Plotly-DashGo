@@ -99,7 +99,7 @@ def root_router(href):
             menu_access = MenuAccess(rt_access['user_name'])
         # 找不到该授权用户
         except NotFoundUserException as e:
-            logger.warning(e.message)
+            logger.warning(getattr(e, 'message', None) or str(e))
             util_jwt.clear_access_token_from_session()
             return (
                 login.render_content(),

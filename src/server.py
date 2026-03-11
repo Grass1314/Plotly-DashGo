@@ -1,3 +1,17 @@
+import sys
+import pkgutil
+if sys.version_info >= (3, 14) and not hasattr(pkgutil, 'find_loader'):
+    import importlib.util
+
+    def _find_loader_compat(name):
+        try:
+            spec = importlib.util.find_spec(name)
+            return spec.loader if spec else None
+        except (ModuleNotFoundError, ValueError, AttributeError):
+            return None
+
+    pkgutil.find_loader = _find_loader_compat
+
 from flask import request, redirect, send_from_directory, abort, jsonify, Response
 from common.exception import OAuth2Error
 from common.utilities.util_oauth2 import current_token, require_oauth
@@ -69,9 +83,14 @@ def task_log_sse():
         response.status_code = HttpStatusConstant.FORBIDDEN
         return response
 
-    job_id = unquote(request.headers.get('job-id'))
-    start_datetime = request.headers.get('start-datetime')
-    start_datetime = datetime.strptime(start_datetime, '%Y-%m-%dT%H:%M:%S.%f')
+    raw_job_id = request.headers.get('job-id')
+    raw_start_datetime = request.headers.get('start-datetime')
+    if not raw_job_id or not raw_start_datetime:
+        response = jsonify({'error': 'Missing required headers: job-id, start-datetime'})
+        response.status_code = HttpStatusConstant.BAD_REQUEST
+        return response
+    job_id = unquote(raw_job_id)
+    start_datetime = datetime.strptime(raw_start_datetime, '%Y-%m-%dT%H:%M:%S.%f')
 
     def _stream():
         total_log = None
@@ -175,6 +194,8 @@ def authorize():
     if request.args.get('client_id') is None:
         raise OAuth2Error('Invalid_client_id')
     client = exist_client(client_id=request.args.get('client_id'))
+    if client is None:
+        raise OAuth2Error('Invalid_client_id')
     # 检查scope
     if request.args.get('scope') is None or client.check_scope(request.args.get('scope').split()):
         raise OAuth2Error('Invalid_scope')
@@ -192,7 +213,7 @@ def authorize():
         return render_template_string(authorize_html, scope=request.args.get('scope'), client_id=request.args.get('client_id'), user_name=user_name)
 
     # 3. 同意授权
-    grant_user = rt_access['user_name'] if request.form['confirm'] or request.args.get('confirm') == 'yes' else None
+    grant_user = rt_access['user_name'] if request.form.get('confirm') == 'yes' or request.args.get('confirm') == 'yes' else None
     if grant_user is None:
         raise OAuth2Error('NOT_IMPLEMENTED', HttpStatusConstant.NOT_IMPLEMENTED)
     # 生成code授权码
@@ -204,7 +225,7 @@ def authorize():
         redirect_uri=request.args.get('redirect_uri'),
         scope=request.args.get('scope'),
     ):
-        return redirect(URL(request.args.get('redirect_uri')).with_query({'code': auth_code, 'state': request.args.get('state')}).__str__())
+        return redirect(URL(request.args.get('redirect_uri')).update_query({'code': auth_code, 'state': request.args.get('state')}).__str__())
     else:
         raise OAuth2Error('Internal error: Authorization code generation failed')
 
